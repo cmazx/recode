@@ -6,6 +6,7 @@ import (
 	"github.com/minio/minio-go/v7/pkg/credentials"
 	"log"
 	"os"
+	"strings"
 )
 
 type S3Storage struct {
@@ -47,18 +48,24 @@ func NewS3Storage() Storage {
 	return s
 }
 
-func (s S3Storage) Put(localPath string, storagePath string) (string, error) {
+func (s S3Storage) Put(localPath string, storagePath string, isPublic bool) (string, error) {
 	log.Printf("Put file %s to storage path %s", localPath, storagePath)
-	mime, err := GetFileContentType(storagePath)
+	mime, err := GetFileContentType(localPath)
+	log.Printf("Mime type %s", mime)
 	if err != nil {
 		return "", err
 	}
-	opts := minio.PutObjectOptions{ContentType: mime}
+
+	userMetaData := map[string]string{"x-amz-acl": "private"}
+	if isPublic {
+		userMetaData["x-amz-acl"] = "public-read"
+	}
+	opts := minio.PutObjectOptions{ContentType: mime, UserMetadata: userMetaData}
 	info, err := s.s3Client.FPutObject(context.Background(), s.storageBucket, storagePath, localPath, opts)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
 	log.Printf("Successfully uploaded %s of size %d\n", storagePath, info.Size)
-	return s.publicUrl + storagePath, nil
+	return strings.TrimRight(s.publicUrl, "/") + "/" + storagePath, nil
 }

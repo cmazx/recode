@@ -6,7 +6,7 @@ import (
 )
 
 type Storage interface {
-	Put(localPath string, storagePath string) (string, error)
+	Put(localPath string, storagePath string, isPublic bool) (string, error)
 }
 
 func GetFileContentType(filePath string) (string, error) {

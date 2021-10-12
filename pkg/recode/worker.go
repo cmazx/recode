@@ -149,7 +149,7 @@ func (w *Worker) doJob(data JobData) {
 		}
 
 		storagePath := strings.Trim(data.Job.TargetPath, "/") + "/" + filepath.Base(resultFilePath)
-		publicUrl, err := w.fileStorage.Put(resultFilePath, storagePath)
+		publicUrl, err := w.fileStorage.Put(resultFilePath, storagePath, data.Job.Publish)
 		if err != nil {
 			data.Job.Status = Failed
 			log.Printf("Processing job %d  error %s\n", data.Job.ID, err.Error())

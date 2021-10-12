@@ -20,8 +20,9 @@ type Job struct {
 	Status     JobStatus     `json:"status" gorm:"status"`
 	SourceUrl  string        `json:"sourceUrl" gorm:"source_url"`
 	Formats    pq.Int32Array `json:"formats"  gorm:"formats;type:integer[]"`
-	JobResult  JobResult     `json:"result"`
+	JobResults []JobResult   `json:"results" gorm:"foreignKey:JobId"`
 	TargetPath string        `json:"targetPath" gorm:"target_path"`
+	Publish    bool          `json:"publish" gorm:"publish"`
 }
 
 type JobData struct {
@@ -69,12 +70,12 @@ func (s *JobStorage) update(job *Job) {
 
 func (s *JobStorage) find(id int) *Job {
 	job := &Job{}
-	s.db.First(job, id)
+	s.db.Preload("JobResults").First(job, id)
 	return job
 }
 func (s *JobStorage) list(page int) []Job {
 	var job []Job
-	s.db.Find(&job).Limit(100).Offset(page * 100)
+	s.db.Preload("JobResults").Find(&job).Limit(100).Offset(page * 100)
 	return job
 }
 func (s *JobStorage) delete(id uint) {

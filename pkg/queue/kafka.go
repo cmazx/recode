@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/confluentinc/confluent-kafka-go/kafka"
-	"log"
 	"os"
 	"strconv"
 	"time"
@@ -116,7 +115,6 @@ func (q *Queue) Consume(f func(payload []byte) error) error {
 
 	if err != nil {
 		if err.(kafka.Error).Code() == kafka.ErrTimedOut {
-			log.Println(".")
 			return nil
 		}
 		fmt.Println("Consume error")
