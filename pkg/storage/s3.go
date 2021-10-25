@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"fmt"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
 	"log"
@@ -16,7 +17,6 @@ type S3Storage struct {
 }
 
 func NewS3Storage() Storage {
-
 	// Initialize minio client object.
 	minioClient, err := minio.New(os.Getenv("S3_STORAGE_ENDPOINT"), &minio.Options{
 		Creds:  credentials.NewStaticV4(os.Getenv("S3_STORAGE_ACCESS_KEY"), os.Getenv("S3_STORAGE_SECRET_KEY"), ""),
@@ -30,7 +30,10 @@ func NewS3Storage() Storage {
 	bucketName := os.Getenv("S3_STORAGE_BUCKET_NAME")
 	location := os.Getenv("S3_STORAGE_REGION")
 	publicUrl := os.Getenv("S3_STORAGE_PUBLIC_URL")
-	err = minioClient.MakeBucket(ctx, bucketName, minio.MakeBucketOptions{Region: location})
+	publicBucket := os.Getenv("S3_STORAGE_PUBLIC_BUCKET")
+	opt := minio.MakeBucketOptions{Region: location}
+
+	err = minioClient.MakeBucket(ctx, bucketName, opt)
 	if err != nil {
 		exists, errBucketExists := minioClient.BucketExists(ctx, bucketName)
 		if errBucketExists == nil && exists {
@@ -42,10 +45,20 @@ func NewS3Storage() Storage {
 		log.Printf("S3 Bucket created %s\n", bucketName)
 	}
 
-	log.Printf("%#v\n", minioClient)
-	var s Storage
-	s = &S3Storage{minioClient, bucketName, publicUrl}
-	return s
+	if publicBucket == "1" {
+		policy := fmt.Sprintf(`{"Version": "2012-10-17","Statement": [{"Action": ["s3:GetObject"],"Effect": "Allow","Principal": {"AWS": ["*"]},"Resource": ["arn:aws:s3:::%s/*"],"Sid": ""}]}`,
+			bucketName)
+		err = minioClient.SetBucketPolicy(context.Background(), bucketName, policy)
+		if err != nil {
+			log.Fatalln(err)
+		}
+	}
+
+	return &S3Storage{minioClient, bucketName, strings.TrimRight(publicUrl, "/")}
+}
+
+func (s S3Storage) GetObjectUrl(storagePath string) string {
+	return s.publicUrl + storagePath
 }
 
 func (s S3Storage) Put(localPath string, storagePath string, isPublic bool) (string, error) {
@@ -60,6 +73,7 @@ func (s S3Storage) Put(localPath string, storagePath string, isPublic bool) (str
 	if isPublic {
 		userMetaData["x-amz-acl"] = "public-read"
 	}
+	fmt.Printf("Store object %s with metadata %v\n", storagePath, userMetaData)
 	opts := minio.PutObjectOptions{ContentType: mime, UserMetadata: userMetaData}
 	info, err := s.s3Client.FPutObject(context.Background(), s.storageBucket, storagePath, localPath, opts)
 	if err != nil {
@@ -67,5 +81,5 @@ func (s S3Storage) Put(localPath string, storagePath string, isPublic bool) (str
 	}
 
 	log.Printf("Successfully uploaded %s of size %d\n", storagePath, info.Size)
-	return strings.TrimRight(s.publicUrl, "/") + "/" + storagePath, nil
+	return s.GetObjectUrl(storagePath), nil
 }

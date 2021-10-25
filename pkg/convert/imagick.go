@@ -6,6 +6,21 @@ import (
 	"log"
 )
 
+/*
+func Process(format MediaFormat, sourcePath string, targetDir string) (string, error) {
+	outPath := targetDir + "/" + uuid.New().String() + "." + string(format.Encoding)
+	file, err := os.Create(outPath)
+	if err != nil {
+		return "", err
+	}
+	_, err = file.Write([]byte("test"))
+	if err != nil {
+		return "", err
+	}
+	return outPath, nil
+}
+*/
+
 func Process(format MediaFormat, sourcePath string, targetDir string) (string, error) {
 	imagick.Initialize()
 	defer imagick.Terminate()
@@ -18,7 +33,7 @@ func Process(format MediaFormat, sourcePath string, targetDir string) (string, e
 	if err != nil {
 		return "", err
 	}
-	err = mw.ResizeImage(format.Height, format.Width, imagick.FILTER_TRIANGLE, 0)
+	err = mw.ResizeImage(format.Width, format.Height, imagick.FILTER_UNDEFINED, 0)
 	if err != nil {
 		return "", err
 	}

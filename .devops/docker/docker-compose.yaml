@@ -94,6 +94,7 @@ services:
       - default
     ports:
       - ${S3_STORAGE_ENDPOINT_PORT}:9000
+      - 9003:9003
     environment:
       MINIO_ACCESS_KEY: ${S3_STORAGE_ACCESS_KEY}
       MINIO_SECRET_KEY: ${S3_STORAGE_SECRET_KEY}

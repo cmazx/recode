@@ -22,7 +22,7 @@ import (
 
 type Worker struct {
 	signalCh      chan os.Signal
-	queueService  *queue.Queue
+	consumer      *queue.Consumer
 	stopCh        chan interface{}
 	formatStorage *MediaFormatStorage
 	jobStorage    *JobStorage
@@ -31,7 +31,7 @@ type Worker struct {
 	fileStorage   storage.Storage
 }
 
-func NewWorker(queueService *queue.Queue, formatStorage *MediaFormatStorage, jobStorage *JobStorage, stg storage.Storage, signalCh chan os.Signal) *Worker {
+func NewWorker(consumer *queue.Consumer, formatStorage *MediaFormatStorage, jobStorage *JobStorage, stg storage.Storage, signalCh chan os.Signal) *Worker {
 	tempMediaPath := os.Getenv("MEDIA_TEMP_PATH")
 	if tempMediaPath == "" {
 		panic("No temporal media path specified in MEDIA_TEMP_PATH env variable")
@@ -44,7 +44,7 @@ func NewWorker(queueService *queue.Queue, formatStorage *MediaFormatStorage, job
 	}
 	return &Worker{
 		signalCh,
-		queueService,
+		consumer,
 		make(chan interface{}, 1),
 		formatStorage,
 		jobStorage,
@@ -82,7 +82,7 @@ func (w *Worker) Start() {
 				consumerTicker.Stop()
 				return
 			case <-consumerTicker.C:
-				err := w.queueService.Consume(func(payload []byte) error {
+				err := w.consumer.Consume(func(payload []byte) error {
 					log.Println("Job message consumed " + string(payload))
 					job := JobData{}
 					err := json.Unmarshal(payload, &job)
@@ -148,7 +148,8 @@ func (w *Worker) doJob(data JobData) {
 			details = err.Error()
 		}
 
-		storagePath := strings.Trim(data.Job.TargetPath, "/") + "/" + filepath.Base(resultFilePath)
+		storagePath := strings.Trim(data.Job.TargetPath, "/") + "/" +
+			filepath.Base(resultFilePath)
 		publicUrl, err := w.fileStorage.Put(resultFilePath, storagePath, data.Job.Publish)
 		if err != nil {
 			data.Job.Status = Failed
@@ -181,11 +182,12 @@ func (w *Worker) doJob(data JobData) {
 	log.Println("Processing completed")
 }
 
-func (w *Worker) generateRandomFilePath() string {
-	return w.tempMediaPath + "/" + uuid.New().String()
+func (w *Worker) generateRandomFilePath(url string) string {
+	ext := filepath.Ext(url)
+	return w.tempMediaPath + "/" + uuid.New().String() + ext
 }
 func (w *Worker) fetchSource(url string) (string, error) {
-	path := w.generateRandomFilePath()
+	path := w.generateRandomFilePath(url)
 	out, err := os.Create(path)
 	if err != nil {
 		return "", err

@@ -14,12 +14,12 @@ import (
 type ApiService struct {
 	jobs          chan Job
 	signalCh      chan os.Signal
-	queueService  *queue.Queue
+	queueService  *queue.Producer
 	formatStorage *MediaFormatStorage
 	jobStorage    *JobStorage
 }
 
-func NewWorkBroker(queueService *queue.Queue, formatStorage *MediaFormatStorage, storage *JobStorage, signalCh chan os.Signal) *ApiService {
+func NewWorkBroker(queueService *queue.Producer, formatStorage *MediaFormatStorage, storage *JobStorage, signalCh chan os.Signal) *ApiService {
 	return &ApiService{
 		make(chan Job, 1000),
 		signalCh,

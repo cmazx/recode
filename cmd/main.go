@@ -41,10 +41,6 @@ func main() {
 		panic("No role argument specified")
 	}
 
-	queueService, err := queue.NewQueue()
-	if err != nil {
-		panic(err)
-	}
 	db := newDbConnection()
 	formatStorage := recode.NewMediaFormatStorage(db)
 	jobStorage := recode.NewJobFormatStorage(db)
@@ -52,9 +48,17 @@ func main() {
 
 	switch os.Args[1] {
 	case "api":
-		recode.NewWorkBroker(queueService, formatStorage, jobStorage, sigs).Start()
+		producer, err := queue.NewProducer()
+		if err != nil {
+			panic(err)
+		}
+		recode.NewWorkBroker(producer, formatStorage, jobStorage, sigs).Start()
 	case "worker":
-		recode.NewWorker(queueService, formatStorage, jobStorage, stg, sigs).Start()
+		consumer, err := queue.NewConsumer()
+		if err != nil {
+			panic(err)
+		}
+		recode.NewWorker(consumer, formatStorage, jobStorage, stg, sigs).Start()
 	default:
 		panic("Unknown role " + os.Args[1] + " specified")
 	}
