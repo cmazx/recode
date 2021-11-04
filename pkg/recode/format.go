@@ -16,8 +16,9 @@ type MediaFormat struct {
 	Name     string                `json:"name" gorm:"name"`
 	Width    uint                  `json:"width" gorm:"width"`
 	Height   uint                  `json:"height" gorm:"height"`
-	Quality  uint8                 `json:"quality" gorm:"quality"`
+	Quality  uint                  `json:"quality" gorm:"quality"`
 	Encoding convert.MediaEncoding `json:"encoding" gorm:"encoding"`
+	Method   convert.ResizeMethod  `json:"method" gorm:"method"`
 }
 
 type MediaFormatStorage struct {

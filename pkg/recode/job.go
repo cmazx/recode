@@ -75,7 +75,7 @@ func (s *JobStorage) find(id int) *Job {
 }
 func (s *JobStorage) list(page int) []Job {
 	var job []Job
-	s.db.Preload("JobResults").Find(&job).Limit(100).Offset(page * 100)
+	s.db.Preload("JobResults").Order("id desc").Limit(100).Offset(page * 100).Find(&job)
 	return job
 }
 func (s *JobStorage) delete(id uint) {

@@ -130,14 +130,16 @@ func (w *Worker) doJob(data JobData) {
 
 	data.Job.Status = Done
 	var results []*JobResult
+	fmt.Println(data.Formats)
 	for _, format := range data.Formats {
-		log.Printf("Processing job %d format %v\n", data.Job.ID, format)
+		log.Printf("Processing job %d format %s\n", data.Job.ID, format.Method)
 		mf := convert.MediaFormat{
 			Name:     format.Name,
 			Width:    format.Width,
 			Height:   format.Height,
 			Quality:  format.Quality,
 			Encoding: format.Encoding,
+			Method:   format.Method,
 		}
 		resultFilePath, err := convert.Process(mf, tempPath, w.tempMediaPath)
 		data.Job.Status = Done
@@ -172,7 +174,9 @@ func (w *Worker) doJob(data JobData) {
 		}
 	}
 
-	w.jobStorage.createJobResults(results)
+	if len(results) > 0 {
+		w.jobStorage.createJobResults(results)
+	}
 	w.jobStorage.update(&data.Job)
 
 	err = os.Remove(tempPath)
@@ -180,6 +184,21 @@ func (w *Worker) doJob(data JobData) {
 		return
 	}
 	log.Println("Processing completed")
+}
+
+func copyTest(path string, name string) {
+	file, err := os.Open(path)
+	if err != nil {
+		log.Fatalf(err.Error())
+	}
+	to, err := os.Create("/tmp/" + name)
+	if err != nil {
+		log.Fatalf(err.Error())
+	}
+	_, err = io.Copy(file, to)
+	if err != nil {
+		log.Fatalf(err.Error())
+	}
 }
 
 func (w *Worker) generateRandomFilePath(url string) string {

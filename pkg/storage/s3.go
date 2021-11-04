@@ -58,7 +58,7 @@ func NewS3Storage() Storage {
 }
 
 func (s S3Storage) GetObjectUrl(storagePath string) string {
-	return s.publicUrl + storagePath
+	return strings.TrimRight(s.publicUrl, "/") + "/" + s.storageBucket + "/" + strings.TrimLeft(storagePath, "/")
 }
 
 func (s S3Storage) Put(localPath string, storagePath string, isPublic bool) (string, error) {

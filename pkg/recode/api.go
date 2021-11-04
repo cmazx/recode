@@ -61,6 +61,10 @@ func (w *ApiService) CreateJob(c echo.Context) error {
 	job.Status = New
 	w.jobStorage.create(job)
 
+	fmt.Printf("%v\n", JobData{
+		*job,
+		w.formatStorage.listByIds(job.Formats),
+	})
 	err = w.queueService.Enqueue(w.queueService.JobTopicName, JobData{
 		*job,
 		w.formatStorage.listByIds(job.Formats),
