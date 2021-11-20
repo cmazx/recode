@@ -31,7 +31,8 @@ type Worker struct {
 	fileStorage   storage.Storage
 }
 
-func NewWorker(consumer *queue.Consumer, formatStorage *MediaFormatStorage, jobStorage *JobStorage, stg storage.Storage, signalCh chan os.Signal) *Worker {
+func NewWorker(consumer *queue.Consumer, formatStorage *MediaFormatStorage, jobStorage *JobStorage,
+	stg storage.Storage, signalCh chan os.Signal) *Worker {
 	tempMediaPath := os.Getenv("MEDIA_TEMP_PATH")
 	if tempMediaPath == "" {
 		panic("No temporal media path specified in MEDIA_TEMP_PATH env variable")

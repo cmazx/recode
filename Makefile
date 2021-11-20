@@ -7,6 +7,8 @@ run:
 	docker-compose -f .devops/docker/docker-compose.yaml build api
 	docker-compose -f .devops/docker/docker-compose.yaml build worker
 	docker-compose -f .devops/docker/docker-compose.yaml up -d
+up:
+	docker-compose -f .devops/docker/docker-compose.yaml up -d
 api-sh:
 	docker-compose -f .devops/docker/docker-compose.yaml exec api sh
 

@@ -26,7 +26,7 @@ func newDbConnection() *gorm.DB {
 	if err != nil {
 		panic(err)
 	}
-	err = recode.AutomigrateFormats(conn)
+	err = recode.AutoMigrateFormats(conn)
 	if err != nil {
 		panic(err)
 	}

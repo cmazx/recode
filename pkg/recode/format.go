@@ -7,7 +7,7 @@ import (
 	"strconv"
 )
 
-func AutomigrateFormats(db *gorm.DB) error {
+func AutoMigrateFormats(db *gorm.DB) error {
 	return db.AutoMigrate(&MediaFormat{})
 }
 

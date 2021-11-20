@@ -32,7 +32,7 @@ services:
       traefik.enable: '1'
       traefik.frontend.rule: 'Host:api.recode.box'
       traefik.docker.network: 'router'
-      traefik.port: '8080'
+      traefik.port: '8380'
     command: [ "./main", "api" ]
   db:
     env_file: .env
@@ -61,7 +61,7 @@ services:
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9198,PLAINTEXT_HOST://localhost:29092
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
@@ -80,7 +80,7 @@ services:
       - zookeeper
     environment:
       KAFKA_CLUSTERS_0_NAME: leader-id
-      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9198
       KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
   storage:
     image: minio/minio
@@ -93,14 +93,14 @@ services:
       - router
       - default
     ports:
-      - ${S3_STORAGE_ENDPOINT_PORT}:9000
+      - ${S3_STORAGE_ENDPOINT_PORT}:9100
       - 9003:9003
     environment:
       MINIO_ACCESS_KEY: ${S3_STORAGE_ACCESS_KEY}
       MINIO_SECRET_KEY: ${S3_STORAGE_SECRET_KEY}
     entrypoint: /bin/sh -c "true \
       && mkdir -p '/data/${S3_STORAGE_BUCKET_NAME}' \
-      && minio server /data --console-address ':80'"
+      && minio server /data --console-address ':80'  --address ':9100'"
 volumes:
   fs_database:
 networks:
